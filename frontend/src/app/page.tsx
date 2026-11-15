@@ -1,7 +1,10 @@
+'use client'
+import EmailCard from "@/components/EmailCard";
+
 export default function Home() {
   return (
-    <>
-      <div className="flex items-center justify-center text-2xl font-bold border-2 p-2 m-2">OTP Generator System</div>
-    </>
+    <main className="flex min-h-screen flex-1 flex-col items-center justify-center p-4">
+      <EmailCard />
+    </main>
   );
 }
