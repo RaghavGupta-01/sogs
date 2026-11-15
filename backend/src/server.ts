@@ -1,11 +1,14 @@
 import express, { type Request, type Response } from "express";
 import cors from "cors";
+import otpRoutes from "./modules/otp.routes.js";
 
 const app = express();
 const PORT = 5000;
 
 app.use(cors());
 app.use(express.json());
+
+app.use("/api/otp", otpRoutes);
 
 app.get("/health", (_req: Request, res: Response) => {
     res.status(200).json({
