@@ -1,4 +1,7 @@
+"use client";
+
 import { useState } from "react";
+import { requestOtp } from "@/lib/api";
 
 interface EmailCardProps {
   onSubmit?: (email: string) => void;
@@ -7,13 +10,14 @@ interface EmailCardProps {
 export default function EmailCard({ onSubmit }: EmailCardProps) {
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const validateEmail = (value: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(value);
   };
 
-  const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     const trimmedEmail = email.trim();
 
@@ -28,8 +32,18 @@ export default function EmailCard({ onSubmit }: EmailCardProps) {
     }
 
     setError(null);
-    onSubmit?.(trimmedEmail);
-    console.log(trimmedEmail)
+    setIsLoading(true);
+
+    try {
+      await requestOtp(trimmedEmail);
+      onSubmit?.(trimmedEmail);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Failed to generate OTP. Please try again.";
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -54,14 +68,15 @@ export default function EmailCard({ onSubmit }: EmailCardProps) {
               type="email"
               name="email"
               value={email}
+              disabled={isLoading}
               placeholder="you@example.com"
               onChange={(e) => {
                 setEmail(e.target.value);
                 if (error) setError(null);
               }}
-              className={`w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-black-900 outline-none transition placeholder:text-black-400 ${error
-                ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
-                : "border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              className={`w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-black-900 outline-none transition placeholder:text-black-400 disabled:opacity-60 ${error
+                  ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
+                  : "border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 }`}
             />
           </div>
@@ -74,10 +89,16 @@ export default function EmailCard({ onSubmit }: EmailCardProps) {
 
         <button
           type="submit"
-          disabled={!email.trim()}
+          disabled={isLoading || !email.trim()}
           className="group inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/40 disabled:cursor-not-allowed disabled:opacity-50 hover:cursor-pointer"
         >
-          <span>Send OTP</span>
+          {isLoading ? (
+            <span className="inline-flex items-center gap-2">
+              <span>Sending OTP...</span>
+            </span>
+          ) : (
+            <span>Send OTP</span>
+          )}
         </button>
       </form>
     </div>
