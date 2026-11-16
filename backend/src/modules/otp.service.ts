@@ -1,18 +1,33 @@
-import { randomInt } from "node:crypto";
+import "dotenv/config";
+import { randomInt, createHmac } from "node:crypto";
 import { redis } from "../infrastructure/redis/redis.js";
 
-export const generateOtp = async (email: string) => {
+const OTP_TTL_SECONDS = 300;
+
+const hashOtp = (otp: string, email: string): string => {
+    const secret = process.env.OTP_SECRET;
+
+    if (!secret) {
+        throw new Error("OTP_SECRET is not configured");
+    }
+
+    return createHmac("sha256", secret)
+        .update(`${email}:${otp}`)
+        .digest("hex");
+};
+
+export const generateOtp = async (email: string): Promise<string> => {
+    const normalizedEmail = email.trim().toLowerCase();
 
     const otp = randomInt(0, 1_000_000)
         .toString()
         .padStart(6, "0");
 
-    const normalizedEmail = email.trim().toLowerCase();
+    const hashedOtp = hashOtp(otp, normalizedEmail);
 
     const key = `otp:${normalizedEmail}`;
 
-    await redis.set(key, otp);
+    await redis.set(key, hashedOtp, "EX", OTP_TTL_SECONDS);
 
     return otp;
-
 };
