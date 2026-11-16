@@ -2,26 +2,46 @@ import type { Request, Response } from "express";
 import * as otpService from "./otp.service.js";
 
 export const generateOtp = async (req: Request, res: Response) => {
-    const email = req.body.email;
+    try {
+        const { email } = req.body;
 
-    const getOtp = await otpService.generateOtp(email);
+        await otpService.generateOtp(email);
 
-    res.status(200).json({
-        success: true,
-        active: true
-    });
+        return res.status(200).json({
+            success: true,
+            message: "OTP generated successfully"
+        });
+    } catch (error) {
+        console.error("Error generating OTP:", error);
+        return res.status(500).json({
+            success: false,
+            error: "Failed to generate OTP"
+        });
+    }
 };
 
 export const verifyOtp = async (req: Request, res: Response) => {
-    const { email, otp } = req.body;
+    try {
+        const { email, otp } = req.body;
 
-    const isValid = await otpService.verifyOtp(email, otp);
+        const isValid = await otpService.verifyOtp(email, otp);
 
-    return res.status(200).json({
-        success: true,
-        message: "OTP verified successfully"
-    })
-}
+        if (!isValid) {
+            return res.status(400).json({
+                success: false,
+                error: "Invalid or expired OTP"
+            });
+        }
 
-
-
+        return res.status(200).json({
+            success: true,
+            message: "OTP verified successfully"
+        });
+    } catch (error) {
+        console.error("Error verifying OTP:", error);
+        return res.status(500).json({
+            success: false,
+            error: "Failed to verify OTP"
+        });
+    }
+};
