@@ -46,7 +46,5 @@ export const verifyOtp = async (email: string, otp: string) => {
 
     const providedHashedOtp = hashOtp(otp, normalizedEmail);
 
-    console.log(providedHashedOtp);
-
     return storedHashedOtp === providedHashedOtp;
 }

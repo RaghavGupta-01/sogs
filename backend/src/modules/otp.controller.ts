@@ -3,7 +3,14 @@ import * as otpService from "./otp.service.js";
 
 export const generateOtp = async (req: Request, res: Response) => {
     try {
-        const { email } = req.body;
+        const { email } = req.body ?? {};
+
+        if (!email || typeof email !== "string" || !email.trim()) {
+            return res.status(400).json({
+                success: false,
+                error: "Valid email is required"
+            });
+        }
 
         await otpService.generateOtp(email);
 
@@ -22,7 +29,21 @@ export const generateOtp = async (req: Request, res: Response) => {
 
 export const verifyOtp = async (req: Request, res: Response) => {
     try {
-        const { email, otp } = req.body;
+        const { email, otp } = req.body ?? {};
+
+        if (!email || typeof email !== "string" || !email.trim()) {
+            return res.status(400).json({
+                success: false,
+                error: "Valid email is required"
+            });
+        }
+
+        if (!otp || typeof otp !== "string" || !otp.trim()) {
+            return res.status(400).json({
+                success: false,
+                error: "Valid OTP is required"
+            });
+        }
 
         const isValid = await otpService.verifyOtp(email, otp);
 
