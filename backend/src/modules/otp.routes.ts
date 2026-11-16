@@ -1,8 +1,10 @@
 import express from "express";
-import { generateOtp } from "./otp.controller.js";
+import { generateOtp, verifyOtp } from "./otp.controller.js";
 
 const router = express.Router();
 
 router.post("/request", generateOtp);
+
+router.post("/verify", verifyOtp);
 
 export default router;

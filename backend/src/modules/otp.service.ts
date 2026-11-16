@@ -31,3 +31,22 @@ export const generateOtp = async (email: string): Promise<string> => {
 
     return otp;
 };
+
+
+export const verifyOtp = async (email: string, otp: string) => {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const key = `otp:${normalizedEmail}`;
+
+    const storedHashedOtp = await redis.get(key);
+
+    if (!storedHashedOtp) {
+        return false;
+    }
+
+    const providedHashedOtp = hashOtp(otp, normalizedEmail);
+
+    console.log(providedHashedOtp);
+
+    return storedHashedOtp === providedHashedOtp;
+}
