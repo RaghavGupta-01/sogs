@@ -22,6 +22,7 @@ export const generateOtp = async (email: string): Promise<string> => {
     const otp = randomInt(0, 1_000_000)
         .toString()
         .padStart(6, "0");
+    console.log("otp: ", otp);
 
     const hashedOtp = hashOtp(otp, normalizedEmail);
 
