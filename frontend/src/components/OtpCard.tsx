@@ -11,6 +11,7 @@ interface OtpCardProps {
 export default function OtpCard({ email, onSuccess, onBack }: OtpCardProps) {
   const [digits, setDigits] = useState<string[]>(Array(6).fill(""));
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -34,7 +35,6 @@ export default function OtpCard({ email, onSuccess, onBack }: OtpCardProps) {
   const handleKeyDown = (index: number, e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Backspace") {
       if (!digits[index] && index > 0) {
-
         const nextDigits = [...digits];
         nextDigits[index - 1] = "";
         setDigits(nextDigits);
@@ -46,7 +46,6 @@ export default function OtpCard({ email, onSuccess, onBack }: OtpCardProps) {
       inputRefs.current[index + 1]?.focus();
     }
   };
-
 
   const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
@@ -68,17 +67,20 @@ export default function OtpCard({ email, onSuccess, onBack }: OtpCardProps) {
 
   const handleVerify = async (e?: React.SubmitEvent<HTMLFormElement>) => {
     if (e) e.preventDefault();
-    if (!isComplete) return;
+    if (!isComplete || isLoading) return;
 
     setError(null);
+    setIsLoading(true);
 
     try {
-      await verifyOtp(email,otpValue);
+      await verifyOtp(email, otpValue);
       onSuccess?.();
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Invalid or expired OTP. Please try again.";
       setError(message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -88,6 +90,20 @@ export default function OtpCard({ email, onSuccess, onBack }: OtpCardProps) {
         <h1 className="text-xl font-semibold text-black-900">
           Enter verification code
         </h1>
+        {email && (
+          <p className="mt-1.5 text-sm text-gray-600">
+            Sent to <span className="font-medium text-gray-900">{email}</span>
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="ml-2 text-xs text-blue-600 hover:underline hover:cursor-pointer"
+              >
+                Change
+              </button>
+            )}
+          </p>
+        )}
       </div>
 
       <form onSubmit={handleVerify} className="mt-6 space-y-5">
@@ -102,20 +118,37 @@ export default function OtpCard({ email, onSuccess, onBack }: OtpCardProps) {
               inputMode="numeric"
               maxLength={1}
               value={digit}
+              disabled={isLoading}
               onChange={(e) => handleChange(index, e.target.value)}
               onKeyDown={(e) => handleKeyDown(index, e)}
               onPaste={handlePaste}
-              className={`h-12 w-11 rounded-lg border bg-white text-center text-xl font-semibold text-black-900 outline-none transition disabled:opacity-60 border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20`}
+              className={`h-12 w-11 rounded-lg border bg-white text-center text-xl font-semibold text-black-900 outline-none transition disabled:opacity-60 ${
+                error
+                  ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
+                  : "border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              }`}
             />
           ))}
         </div>
 
+        {error && (
+          <p className="text-center text-xs text-red-500">
+            {error}
+          </p>
+        )}
+
         <button
           type="submit"
-          disabled={!isComplete}
-          className="group inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/40 disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={!isComplete || isLoading}
+          className="group inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/40 disabled:cursor-not-allowed disabled:opacity-50 hover:cursor-pointer"
         >
-          <span>Verify OTP</span>
+          {isLoading ? (
+            <span className="inline-flex items-center gap-2">
+              <span>Verifying OTP...</span>
+            </span>
+          ) : (
+            <span>Verify OTP</span>
+          )}
         </button>
       </form>
     </div>
