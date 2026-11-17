@@ -1,4 +1,6 @@
+"use client"
 import { useState, useRef, type ClipboardEvent, type KeyboardEvent } from "react";
+import { verifyOtp } from "@/lib/api";
 
 interface OtpCardProps {
   email: string;
@@ -71,7 +73,7 @@ export default function OtpCard({ email, onSuccess, onBack }: OtpCardProps) {
     setError(null);
 
     try {
-      console.log(`OTP : ${otpValue}, Email: ${email}`);
+      await verifyOtp(email,otpValue);
       onSuccess?.();
     } catch (err: unknown) {
       const message =

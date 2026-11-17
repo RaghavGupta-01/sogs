@@ -26,3 +26,24 @@ export async function requestOtp(email: string): Promise<ApiResponse> {
 
   return data;
 }
+
+export async function verifyOtp(email: string, otp: string): Promise<ApiResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/otp/verify`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email, otp }),
+  });
+
+  const data: ApiResponse = await response.json().catch(() => ({
+    success: false,
+    error: "Invalid response from server",
+  }));
+
+  if (!response.ok || !data.success) {
+    throw new Error(data.error || "Failed to verify OTP");
+  }
+
+  return data;
+}

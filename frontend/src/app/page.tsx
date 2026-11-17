@@ -5,7 +5,7 @@ import EmailCard from "@/components/EmailCard";
 import OtpCard from "@/components/OtpCard";
 
 export default function Home() {
-  const [step, setStep] = useState<"email" | "otp">("otp");
+  const [step, setStep] = useState<"email" | "otp">("email");
   const [email, setEmail] = useState("");
 
   const handleEmailSubmitted = (submittedEmail: string) => {
