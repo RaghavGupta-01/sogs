@@ -88,5 +88,10 @@ Run both or individual services using workspace scripts from the root directory:
   ```
   Accessible at `http://localhost:5000`  
   
-  
 ---
+
+## 📚 Documentation
+
+- **[System Architecture](docs/system-architecture.md)**: System overview, component interactions, and data storage design.
+- **[Architectural Decisions (ADRs)](docs/decisions.md)**: Design choices and trade-offs
+
