@@ -1,7 +1,6 @@
 import express, { type Request, type Response } from "express";
 import cors from "cors";
 import otpRoutes from "./modules/otp.routes.js";
-import "./infrastructure/queue/email.worker.js";
 
 const app = express();
 const PORT = 5000;

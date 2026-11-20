@@ -5,6 +5,7 @@
   "description": "SOGS backend API",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "worker": "tsx watch src/infrastructure/queue/email.worker.ts",
     "build": "tsc",
     "start": "node dist/server.js"
   },

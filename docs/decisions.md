@@ -59,3 +59,35 @@ The provider can be replaced later depending on deployment constraints, sending 
 - Reassess free-tier limitations and custom-domain requirements.
 - Introduce provider-specific delivery tracking where necessary.
 - Ensure retry handling and duplicate-delivery considerations remain independent of the email provider.
+
+---
+
+# ADR-002: Separate Background Worker Process from API Server
+
+## Context
+
+Background job execution (email delivery via BullMQ) can run either within the same Node.js process as the Express HTTP server or as a standalone process.
+
+Running both in a single process introduces several trade-offs:
+- CPU-heavy tasks or worker crashes can degrade or bring down the public HTTP API.
+- Scaling the API forces horizontal scaling of the worker at the same ratio, which may violate email provider concurrency and rate limits.
+- Process restarts during web deployments disrupt active background jobs and cause unnecessary job stalling.
+
+## Decision
+
+Decouple the BullMQ worker from the Express server process.
+- The HTTP server (`src/server.ts`) will act exclusively as a **job producer** (enqueuing jobs into Redis).
+- The worker (`src/infrastructure/queue/email.worker.ts`) will run as an **isolated consumer process**.
+- Separate runtime scripts will be provided (`dev:backend` for the API, `dev:worker` for background jobs).
+
+## Consequences
+
+### Positive
+- **Fault Isolation:** A worker crash or memory leak has zero impact on HTTP request handling.
+- **Independent Scaling:** API and worker processes can be scaled independently based on workload.
+- **Zero Event Loop Contention:** Express latency is never affected by email processing, template compilation, or SMTP connection retries.
+- **Clean Architecture:** Enforces a strict producer-consumer boundary.
+
+### Trade-offs
+- Requires running and monitoring two separate processes in development and production environments.
+
