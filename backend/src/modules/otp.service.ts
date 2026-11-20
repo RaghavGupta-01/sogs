@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { randomInt, createHmac } from "node:crypto";
 import { redis } from "../infrastructure/redis/redis.js";
+import { addEmailJob } from "../infrastructure/queue/index.js";
 
 const OTP_TTL_SECONDS = 300;
 
@@ -29,6 +30,12 @@ export const generateOtp = async (email: string): Promise<string> => {
     const key = `otp:${normalizedEmail}`;
 
     await redis.set(key, hashedOtp, "EX", OTP_TTL_SECONDS);
+
+    await addEmailJob({
+        to: normalizedEmail,
+        subject: "Your SOGS Verification Code",
+        text: `Your one-time verification code is: ${otp}. It will expire in 5 minutes.`,
+    });
 
     return otp;
 };
