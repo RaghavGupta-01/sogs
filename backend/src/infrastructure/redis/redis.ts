@@ -12,7 +12,8 @@ redis.on("error", (error) => {
     console.error("Redis connection error:", error);
 });
 
-export const bullmqRedisOptions = {
-    url: REDIS_URL,
-    maxRetriesPerRequest: null,
+export const createRedisClient = (): Redis => {
+    return new Redis(REDIS_URL, {
+        maxRetriesPerRequest: null,
+    });
 };

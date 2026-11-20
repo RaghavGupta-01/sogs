@@ -1,5 +1,5 @@
 import { Worker, type Job } from "bullmq";
-import { bullmqRedisOptions } from "../redis/redis.js";
+import { createRedisClient } from "../redis/redis.js";
 import { EmailFactory, type SendEmailResult, type SendEmailOptions } from "../email/index.js";
 import { EMAIL_QUEUE_NAME, type EmailJobData } from "./email.queue.js";
 
@@ -31,7 +31,7 @@ export const emailWorker = new Worker<EmailJobData, SendEmailResult>(
         return result;
     },
     {
-        connection: bullmqRedisOptions,
+        connection: createRedisClient(),
         concurrency: process.env.EMAIL_WORKER_CONCURRENCY
             ? Number(process.env.EMAIL_WORKER_CONCURRENCY)
             : DEFAULT_CONCURRENCY,

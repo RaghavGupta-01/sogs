@@ -1,5 +1,5 @@
 import { Queue, type JobsOptions } from "bullmq";
-import { bullmqRedisOptions } from "../redis/redis.js";
+import { createRedisClient } from "../redis/redis.js";
 
 export const EMAIL_QUEUE_NAME = "email-queue";
 export const EMAIL_JOB_NAME = "send-email";
@@ -13,7 +13,7 @@ export interface EmailJobData {
 }
 
 export const emailQueue = new Queue<EmailJobData>(EMAIL_QUEUE_NAME, {
-    connection: bullmqRedisOptions,
+    connection: createRedisClient(),
     defaultJobOptions: {
         attempts: 3,
         backoff: {
