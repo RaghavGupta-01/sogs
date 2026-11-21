@@ -87,6 +87,7 @@ Decouple the BullMQ worker from the Express server process.
 - **Independent Scaling:** API and worker processes can be scaled independently based on workload.
 - **Zero Event Loop Contention:** Express latency is never affected by email processing, template compilation, or SMTP connection retries.
 - **Clean Architecture:** Enforces a strict producer-consumer boundary.
+- **Competing Consumers Validation:** Confirmed through testing that multiple worker processes safely pull from the queue concurrently without race conditions or duplicate deliveries, as Redis atomically coordinates job leasing.
 
 ### Trade-offs
 - Requires running and monitoring two separate processes in development and production environments.

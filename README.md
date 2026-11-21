@@ -24,11 +24,11 @@ The primary objective is to explore backend engineering, distributed system desi
 |---|---|---|
 | **Frontend** | Next.js, React, TypeScript, Tailwind CSS | Initialized |
 | **Backend API** | Node.js, Express, TypeScript | Initialized |
-| **Validation** | Zod |  Planned |
-| **Caching & TTL** | Redis (ioredis) | Planned |
-| **Job Queue** | BullMQ | Planned |
-| **Email Service** | Resend | Planned |
-| **Infrastructure** | Docker, Docker Compose | Planned |
+| **Validation** | Zod | Planned |
+| **Caching & TTL** | Redis (ioredis) | Implemented |
+| **Job Queue** | BullMQ | Implemented |
+| **Email Service** | Provider Factory (Console, Gmail) | Implemented |
+| **Infrastructure** | Docker, Docker Compose | Implemented |
 
 ---
 
@@ -74,19 +74,30 @@ sogs/
 
 ### Running Locally
 
-Run both or individual services using workspace scripts from the root directory:
+1. **Start Redis:**
+   ```bash
+   docker compose -f docker/docker-compose.yml up -d
+   ```
 
-- **Run Frontend (Next.js):**
-  ```bash
-  npm run dev:frontend
-  ```
-  Accessible at `http://localhost:3000`.
+2. **Run Services (using workspace scripts from the root directory):**
 
-- **Run Backend (Express):**
-  ```bash
-  npm run dev:backend
-  ```
-  Accessible at `http://localhost:5000`  
+   - **Run Backend API (Express):**
+     ```bash
+     npm run dev:backend
+     ```
+     Accessible at `http://localhost:5000`.
+
+   - **Run Email Queue Worker:**
+     ```bash
+     npm run dev:worker
+     ```
+     Asynchronously processes and delivers queued OTP emails.
+
+   - **Run Frontend (Next.js):**
+     ```bash
+     npm run dev:frontend
+     ```
+     Accessible at `http://localhost:3000`.  
   
 ---
 
