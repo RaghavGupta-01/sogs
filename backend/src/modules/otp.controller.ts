@@ -45,12 +45,13 @@ export const verifyOtp = async (req: Request, res: Response) => {
             });
         }
 
-        const isValid = await otpService.verifyOtp(email, otp);
+        const result = await otpService.verifyOtp(email, otp);
 
-        if (!isValid) {
+        if (!result.success) {
             return res.status(400).json({
                 success: false,
-                error: "Invalid or expired OTP"
+                error: result.error ?? "Invalid or expired OTP",
+                ...(result.remainingAttempts !== undefined && { remainingAttempts: result.remainingAttempts }),
             });
         }
 

@@ -4,6 +4,13 @@ import { redis } from "../infrastructure/redis/redis.js";
 import { addEmailJob } from "../infrastructure/queue/email.queue.js";
 
 const OTP_TTL_SECONDS = 300;
+const MAX_OTP_ATTEMPTS = 3;
+
+export interface VerifyOtpResult {
+    success: boolean;
+    error?: string;
+    remainingAttempts?: number;
+}
 
 const hashOtp = (otp: string, email: string): string => {
     const secret = process.env.OTP_SECRET;
@@ -28,8 +35,10 @@ export const generateOtp = async (email: string): Promise<string> => {
     const hashedOtp = hashOtp(otp, normalizedEmail);
 
     const key = `otp:${normalizedEmail}`;
+    const attemptsKey = `otp:attempts:${normalizedEmail}`;
 
     await redis.set(key, hashedOtp, "EX", OTP_TTL_SECONDS);
+    await redis.del(attemptsKey);
 
     await addEmailJob({
         to: normalizedEmail,
@@ -40,19 +49,52 @@ export const generateOtp = async (email: string): Promise<string> => {
     return otp;
 };
 
-
-export const verifyOtp = async (email: string, otp: string) => {
+export const verifyOtp = async (email: string, otp: string): Promise<VerifyOtpResult> => {
     const normalizedEmail = email.trim().toLowerCase();
 
     const key = `otp:${normalizedEmail}`;
+    const attemptsKey = `otp:attempts:${normalizedEmail}`;
 
     const storedHashedOtp = await redis.get(key);
 
     if (!storedHashedOtp) {
-        return false;
+        return {
+            success: false,
+            error: "Invalid or expired OTP",
+        };
     }
 
     const providedHashedOtp = hashOtp(otp, normalizedEmail);
 
-    return storedHashedOtp === providedHashedOtp;
-}
+    if (storedHashedOtp === providedHashedOtp) {
+        await redis.del(key, attemptsKey);
+        return {
+            success: true,
+        };
+    }
+
+    const attempts = await redis.incr(attemptsKey);
+
+    if (attempts === 1) {
+        const ttl = await redis.ttl(key);
+        if (ttl > 0) {
+            await redis.expire(attemptsKey, ttl);
+        }
+    }
+
+    if (attempts >= MAX_OTP_ATTEMPTS) {
+        await redis.del(key, attemptsKey);
+        return {
+            success: false,
+            error: "Too many failed attempts. OTP has been invalidated. Please request a new one.",
+            remainingAttempts: 0,
+        };
+    }
+
+    const remaining = MAX_OTP_ATTEMPTS - attempts;
+    return {
+        success: false,
+        error: `Invalid OTP. ${remaining} ${remaining === 1 ? "attempt" : "attempts"} remaining.`,
+        remainingAttempts: remaining,
+    };
+};
