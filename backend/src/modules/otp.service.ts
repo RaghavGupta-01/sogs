@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { randomInt, createHmac } from "node:crypto";
 import { redis } from "../infrastructure/redis/redis.js";
-import { addEmailJob } from "../infrastructure/queue/index.js";
+import { addEmailJob } from "../infrastructure/queue/email.queue.js";
 
 const OTP_TTL_SECONDS = 300;
 
