@@ -1,7 +1,8 @@
 import type { EmailService } from "./email.service.js";
 import { ConsoleProvider } from "./providers/console.provider.js";
+import { GmailProvider } from "./providers/gmail.provider.js";
 
-export type EmailProviderType = "console";
+export type EmailProviderType = "gmail" | "console";
 
 export class EmailFactory {
     private static instance: EmailService | null = null;
@@ -10,11 +11,14 @@ export class EmailFactory {
         const type = (providerType ?? process.env.EMAIL_PROVIDER ?? "console").toLowerCase();
 
         switch (type) {
+            case "gmail":
+                return new GmailProvider();
+
             case "console":
                 return new ConsoleProvider();
 
             default:
-                throw new Error(`Unsupported email provider: "${type}". Supported providers: console.`);
+                throw new Error(`Unsupported email provider: "${type}". Supported providers: gmail, console.`);
         }
     }
 
