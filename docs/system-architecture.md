@@ -61,7 +61,9 @@ flowchart TB
 ### 2.2 Verification (`POST /api/otp/verify`)
 1. **Lookup:** Fetches the stored hash from Redis using `otp:{email}`. Fails immediately if missing or expired.
 2. **Hash Comparison:** Hashes incoming OTP with `OTP_SECRET` and performs comparison against stored hash.
-3. **Response:** Returns success (`200 OK`) on match, or an error (`400 Bad Request`) on mismatch/expiry.
+3. **One-Time Consumption:** On match, immediately deletes the OTP and attempt keys from Redis (`DEL`), preventing replay attacks.
+4. **Brute-Force Protection:** On mismatch, increments `otp:attempts:{email}`. If 3 failed attempts are reached, the OTP is permanently invalidated and deleted.
+5. **Response:** Returns `200 OK` on match, or `400 Bad Request` with remaining attempt count on mismatch.
 
 ---
 
@@ -71,9 +73,10 @@ flowchart TB
 | Property | Value | Description |
 |---|---|---|
 | **Key Pattern** | `otp:{normalizedEmail}` | E.g., `otp:user@example.com` |
+| **Attempts Pattern** | `otp:attempts:{normalizedEmail}` | Tracks failed verification attempts (max 3) |
 | **Value Format** | `HMAC-SHA256` string | 64-character hex digest binding `email:otp` |
 | **TTL** | `300 seconds` (5 minutes) | Native auto-expiry managed by Redis |
-| **Collision Policy** | Overwrite (`SET ... EX`) | Re-requesting replaces the previous hash and resets TTL |
+| **Consumption Policy**| Atomic deletion on success | Ensures single-use verification |
 
 ### 3.2 BullMQ Email Queue
 | Property | Value | Description |
@@ -89,5 +92,7 @@ flowchart TB
 
 - **CSPRNG Generation:** `crypto.randomInt()` prevents pseudo-random predictability.
 - **HMAC Pepper Hashing:** Storing HMAC hashes instead of plaintext protects OTPs against memory dumps or Redis read compromises.
+- **One-Time Consumption (Replay Prevention):** Deleting the hash upon successful verification ensures an OTP can never be reused.
+- **Brute-Force Invalidation:** Limiting to 3 failed attempts reduces brute-force success probability on a 6-digit space to 0.0003%.
 - **Email Normalization:** Prevents bypasses via casing or whitespace anomalies.
 - **Strict TTL Expiry:** Records are automatically evicted by Redis after 5 minutes.
