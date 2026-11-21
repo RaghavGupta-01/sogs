@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { EmailFactory } from "../src/infrastructure/email/index.js";
 
 const emailService = EmailFactory.getInstance();

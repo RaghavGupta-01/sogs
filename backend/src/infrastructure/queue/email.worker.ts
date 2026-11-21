@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { Worker, type Job } from "bullmq";
 import { createRedisClient } from "../redis/redis.js";
 import { EmailFactory, type SendEmailResult, type SendEmailOptions } from "../email/index.js";
